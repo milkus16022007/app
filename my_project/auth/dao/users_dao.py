@@ -2,7 +2,7 @@ from my_project.utils.db import get_connection
 
 class UsersDAO:
     TABLE = "Users"
-    
+
     @staticmethod
     def get_all():
         conn = get_connection()
@@ -24,7 +24,7 @@ class UsersDAO:
         return user
 
     @staticmethod
-    def create(full_name, email, phone):
+    def create(full_name, email=None, phone=None):
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute(
@@ -38,7 +38,7 @@ class UsersDAO:
         return inserted_id
 
     @staticmethod
-    def update(user_id, full_name, email, phone):
+    def update(user_id, full_name=None, email=None, phone=None):
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute(
@@ -61,3 +61,37 @@ class UsersDAO:
         cursor.close()
         conn.close()
         return affected
+
+
+    # M:1: користувачі по місту
+    @staticmethod
+    def get_users_by_city(city):
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = """
+            SELECT u.* FROM Users u
+            JOIN Station_Owners so ON u.User_ID = so.User_ID
+            JOIN Stations s ON so.Station_ID = s.Station_ID
+            WHERE s.City=%s
+        """
+        cursor.execute(query, (city,))
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return result
+
+    # M:M: користувачі по станції
+    @staticmethod
+    def get_users_by_station(station_id):
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = """
+            SELECT u.* FROM Users u
+            JOIN Station_Owners so ON u.User_ID = so.User_ID
+            WHERE so.Station_ID=%s
+        """
+        cursor.execute(query, (station_id,))
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return result
